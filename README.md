@@ -43,6 +43,9 @@ php artisan migrate
 
 # Create Passport client for API authentication (REQUIRED)
 php artisan passport:client --personal
+
+# To fetch news data
+php artisan news:aggregate --limit=100 --store
 ```
 
 **Important**: The Passport client creation is required for API authentication to work properly. Make sure to run this command after your first startup.
