@@ -1,0 +1,181 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: nextjs-frontend
+    container_name: frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api}
+      - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-News Aggregator}
+      - NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION:-1.0.0}
+      - NEXT_PUBLIC_ENABLE_ANALYTICS=${NEXT_PUBLIC_ENABLE_ANALYTICS:-false}
+      - NEXT_PUBLIC_ENABLE_ERROR_REPORTING=${NEXT_PUBLIC_ENABLE_ERROR_REPORTING:-false}
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: laravel-backend
+    container_name: backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - APP_NAME=${APP_NAME:-Laravel}
+      - APP_ENV=${APP_ENV:-local}
+      - APP_KEY=${APP_KEY:-base64:rLTrlXCweW1u2AHpAWgkDKJqKWpYZbE9CVgU95Wee4s=}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      - APP_LOCALE=${APP_LOCALE:-en}
+      - APP_FALLBACK_LOCALE=${APP_FALLBACK_LOCALE:-en}
+      - APP_FAKER_LOCALE=${APP_FAKER_LOCALE:-en_US}
+      - LOG_CHANNEL=${LOG_CHANNEL:-stack}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-backend}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-mailhog}
+      - MAIL_PORT=${MAIL_PORT:-1025}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-hello@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-"${APP_NAME}"}
+      - NEWSAPI_KEY=${NEWSAPI_KEY}
+      - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
+      - NYTIMES_API_KEY=${NYTIMES_API_KEY}
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  queue-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: laravel-backend
+    container_name: queue-worker
+    restart: unless-stopped
+    command: php artisan queue:work --tries=${QUEUE_WORKER_TRIES:-3} --timeout=${QUEUE_WORKER_TIMEOUT:-90}
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    environment:
+      - APP_NAME=${APP_NAME:-Laravel}
+      - APP_ENV=${APP_ENV:-local}
+      - APP_KEY=${APP_KEY:-base64:rLTrlXCweW1u2AHpAWgkDKJqKWpYZbE9CVgU95Wee4s=}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-backend}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-mailhog}
+      - MAIL_PORT=${MAIL_PORT:-1025}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-hello@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-"${APP_NAME}"}
+      - NEWSAPI_KEY=${NEWSAPI_KEY}
+      - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
+      - NYTIMES_API_KEY=${NYTIMES_API_KEY}
+    depends_on:
+      - postgres
+      - backend
+    networks:
+      - app-network
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: laravel-backend
+    container_name: scheduler
+    restart: unless-stopped
+    command: /bin/sh -c "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    environment:
+      - APP_NAME=${APP_NAME:-Laravel}
+      - APP_ENV=${APP_ENV:-local}
+      - APP_KEY=${APP_KEY:-base64:rLTrlXCweW1u2AHpAWgkDKJqKWpYZbE9CVgU95Wee4s=}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      - DB_CONNECTION=${DB_CONNECTION:-pgsql}
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-backend}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+      - MAIL_MAILER=${MAIL_MAILER:-smtp}
+      - MAIL_HOST=${MAIL_HOST:-mailhog}
+      - MAIL_PORT=${MAIL_PORT:-1025}
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-hello@example.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-"${APP_NAME}"}
+      - NEWSAPI_KEY=${NEWSAPI_KEY}
+      - GUARDIAN_API_KEY=${GUARDIAN_API_KEY}
+      - NYTIMES_API_KEY=${NYTIMES_API_KEY}
+    depends_on:
+      - postgres
+      - backend
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-backend}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_WEB_PORT:-8025}:8025"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
