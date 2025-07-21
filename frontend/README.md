@@ -82,10 +82,6 @@ A modern, responsive news aggregator frontend built with Next.js, TypeScript, an
 
    ```bash
    npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
    ```
 
 5. **Open your browser**

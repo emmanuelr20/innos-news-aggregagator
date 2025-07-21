@@ -35,11 +35,11 @@ After starting the services for the first time, you need to set up the database 
 # Enter the backend container
 docker-compose exec backend bash
 
+# Creat passport keys
+php artisan passport:keys
+
 # Run database migrations
 php artisan migrate
-
-# Seed the database (optional)
-php artisan db:seed
 
 # Create Passport client for API authentication (REQUIRED)
 php artisan passport:client --personal
@@ -58,37 +58,6 @@ php artisan passport:client --personal
 - **MailHog**: http://localhost:8025 (web interface for email testing)
 - **Queue Worker**: Running in background (processes Laravel jobs)
 - **Scheduler**: Running in background (executes scheduled tasks)
-
-### Running Commands
-
-#### Backend (Laravel) Commands
-
-```bash
-# Enter the backend container
-docker-compose exec backend bash
-
-# Run artisan commands
-php artisan migrate
-php artisan db:seed
-
-# Create Passport client (required for API authentication)
-php artisan passport:client --personal
-
-# Other artisan commands
-php artisan make:controller YourController
-```
-
-#### Frontend (Next.js) Commands
-
-```bash
-# Enter the frontend container
-docker-compose exec frontend sh
-
-# Run npm commands
-npm run lint
-npm run test
-npm run build
-```
 
 ### Stopping the Development Environment
 

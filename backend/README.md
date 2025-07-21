@@ -118,25 +118,31 @@ A robust Laravel-based REST API for a news aggregator application. This backend 
     php artisan key:generate
     ```
 
-6. **Run Database Migrations**
+6. **Generate Application Key**
+
+    ```bash
+    php artisan passport:keys
+    ```
+
+7. **Run Database Migrations**
 
     ```bash
     php artisan migrate
     ```
 
-7. **Install Passport**
+8. **Install Passport**
 
     ```bash
     php artisan passport:install
     ```
 
-8. **Seed Database (Optional)**
+9. **Seed Database (Optional)**
 
     ```bash
     php artisan db:seed
     ```
 
-9. **Start the Development Server**
+10. **Start the Development Server**
     ```bash
     php artisan serve
     ```
